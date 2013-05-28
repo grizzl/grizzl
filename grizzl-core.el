@@ -66,8 +66,8 @@
   "Fuzzy searches for TERM in INDEX prepared with `grizzl-make-index'.
 If OLD-RESULT is non-nil, it is an existing search result to increment from.
 The result can be read with `grizzl-result-strings'."
-  (let* ((result (grizzl-reset-result term old-result))
-         (matches (grizzl-result-matches result))
+  (let* ((result (grizzl-rewind-result term index old-result))
+         (matches (copy-hash-table (grizzl-result-matches result)))
          (from-pos (length (grizzl-result-term result)))
          (remainder (substring term from-pos))
          (table (grizzl-lookup-table index)))
@@ -75,13 +75,11 @@ The result can be read with `grizzl-result-strings'."
               (let ((sub-table (gethash ch table)))
                 (if (not sub-table)
                     (clrhash matches)
-                  (if (> n 0)
-                      (grizzl-search-continue sub-table matches)
-                    (grizzl-search-init sub-table matches)))
+                  (grizzl-search-increment sub-table matches))
                 (1+ n)))
             remainder
             :initial-value from-pos)
-    (grizzl-make-result term matches)))
+    (grizzl-cons-result term matches result)))
 
 ;;;###autoload
 (defun grizzl-result-strings (result index)
@@ -96,29 +94,36 @@ The result can be read with `grizzl-result-strings'."
 
 ;;; --- Private Functions
 
-(defun grizzl-make-result (term matches)
-  "Build a new result for string TERM and hash-table MATCHES."
-    (cons term matches))
+(defun grizzl-cons-result (term matches results)
+  "Build a new result for TERM and hash-table MATCHES consed with RESULTS."
+    (cons (cons term matches) results))
 
-(defun grizzl-reset-result (term result)
+(defun grizzl-rewind-result (term index result)
   "Adjusts RESULT according to TERM, ready for a new search."
   (if result
       (let* ((old-term (grizzl-result-term result))
              (new-len (length term))
              (old-len (length old-term)))
-        (if (and (> new-len old-len)
+        (if (and (>= new-len old-len)
                  (string-equal old-term (substring term 0 old-len)))
               result
-          (grizzl-make-result "" (make-hash-table))))
-    (grizzl-make-result "" (make-hash-table))))
+          (grizzl-rewind-result term index (cdr result))))
+    (grizzl-cons-result "" (grizzl-base-matches index) nil)))
+
+(defun grizzl-base-matches (index)
+  "Returns the full set of matches in INDEX, with an out-of-bound offset."
+  (let ((matches (make-hash-table)))
+    (dotimes (n (length (grizzl-index-strings index)))
+      (puthash n -1 matches))
+    matches))
 
 (defun grizzl-result-term (result)
   "Returns the search term used to find the matches in RESULT."
-  (car result))
+  (car (car result)))
 
 (defun grizzl-result-matches (result)
   "Returns the internal hash used to track the matches in RESULT."
-  (cdr result))
+  (cdar result))
 
 (defun grizzl-result-count (result)
   "Returns the number of matches present in RESULT."
@@ -145,13 +150,7 @@ The result can be read with `grizzl-result-strings'."
   "Returns the vector of strings stored in INDEX."
   (car index))
 
-(defun grizzl-search-init (sub-table result)
-  "Initializes potential matches if the first char matched in search."
-  (maphash (lambda (k v)
-             (puthash k (car v) result))
-           sub-table))
-
-(defun grizzl-search-continue (sub-table result)
+(defun grizzl-search-increment (sub-table result)
   "Use the search lookup table to filter already-accumulated results."
   (cl-flet ((next-offset (key current sub-table)
               (find-if (lambda (v)

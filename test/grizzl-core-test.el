@@ -38,4 +38,13 @@
                                      index)))
     (should (equal matches  '("controllers" "models")))))
 
+(ert-deftest increment-search-substitution-test ()
+  "Test grizzl handles repeated search when edits were made."
+  (let* ((strings '("models" "controllers" "views"))
+         (index (grizzl-make-index strings))
+         (result (grizzl-search "els" index nil))
+         (matches (grizzl-result-strings (grizzl-search "ers" index result)
+                                     index)))
+    (should (equal matches  '("controllers")))))
+
 ;; TODO: Implement and test Levenshtein ordering
