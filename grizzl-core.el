@@ -78,6 +78,7 @@ The result can be read with `grizzl-result-strings'."
             remainder
             :initial-value result)))
 
+;;;###autoload
 (defun grizzl-result-count (result)
   "Returns the number of matches present in RESULT."
   (hash-table-count (grizzl-result-matches result)))
