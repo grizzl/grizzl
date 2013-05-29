@@ -15,28 +15,26 @@
 
 ;;; --- Commentary
 
-;; Overview:
-;;
-;; Grizzl provides  a fuzzy  completion framework for  general purpose
+;; Grizzl provides a fuzzy completion framework for general purpose
 ;; use in Emacs Lisp projects.
 ;;
-;; grizzl-core.el provides  the underlying data structures  and sesrch
-;; algorithm without any  UI attachment.  At the core,  a fuzzy search
+;; grizzl-core.el provides the underlying data structures and sesrch
+;; algorithm without any UI attachment.  At the core, a fuzzy search
 ;; index is created from a list of strings, using `grizzl-make-index'.
-;; A fuzzy search  term is then used  to get a result  from this index
-;; with  `grizzl-search'.  Because  grizzl  considers the  usage of  a
-;; fuzzy  search index  to operate  in real-time  as a  user enters  a
+;; A fuzzy search term is then used to get a result from this index
+;; with `grizzl-search'.  Because grizzl considers the usage of a
+;; fuzzy search index to operate in real-time as a user enters a
 ;; search term in the minibuffer, the framework optimizes for this use
 ;; case.  Any result can be passed back into `grizzl-search' as a hint
-;; to continue searching.  The search  algorithm is able to understand
-;; insertions and deletions and therefore  minimizes the work it needs
-;; to do in this  case.  The intended use here is  to collect a result
+;; to continue searching.  The search algorithm is able to understand
+;; insertions and deletions and therefore minimizes the work it needs
+;; to do in this case.  The intended use here is to collect a result
 ;; on each key press and feed that result into the search for the next
-;; key press. Once a search is  complete, the matched strings are then
+;; key press. Once a search is complete, the matched strings are then
 ;; read, using `grizzl-result-strings'. The results are ordered on the
 ;; Levenshtein distance between them and the search term.
 ;;
-;; It  is assumed  that  the  index will  be  re-used across  multiple
+;; It is assumed that the index will be re-used across multiple
 ;; searches on larger sets of data.
 ;;
 ;; A discussion of the algorithm can be found in the docs/ directory.
@@ -70,16 +68,19 @@ The result can be read with `grizzl-result-strings'."
          (matches (copy-hash-table (grizzl-result-matches result)))
          (from-pos (length (grizzl-result-term result)))
          (remainder (substring term from-pos))
-         (table (grizzl-lookup-table index)))
-    (reduce (lambda (n ch)
-              (let ((sub-table (gethash ch table)))
+         (lookup-table (grizzl-lookup-table index)))
+    (reduce (lambda (acc-res ch)
+              (let ((sub-table (gethash ch lookup-table)))
                 (if (not sub-table)
                     (clrhash matches)
                   (grizzl-search-increment sub-table matches))
-                (1+ n)))
+                (grizzl-cons-result term matches acc-res)))
             remainder
-            :initial-value from-pos)
-    (grizzl-cons-result term matches result)))
+            :initial-value result)))
+
+(defun grizzl-result-count (result)
+  "Returns the number of matches present in RESULT."
+  (hash-table-count (grizzl-result-matches result)))
 
 ;;;###autoload
 (defun grizzl-result-strings (result index)
@@ -87,10 +88,14 @@ The result can be read with `grizzl-result-strings'."
   (let* ((matches (grizzl-result-matches result))
          (strings (grizzl-index-strings index))
          (loaded '()))
+    ;; FIXME: There must be a sorting algorithm than can be combined with this map
     (maphash (lambda (string-offset char-offset)
                (push (elt strings string-offset) loaded))
              matches)
-    loaded))
+    (sort loaded (lambda (a b) (< (length a) (length b))))))
+
+
+
 
 ;;; --- Private Functions
 
@@ -124,10 +129,6 @@ The result can be read with `grizzl-result-strings'."
 (defun grizzl-result-matches (result)
   "Returns the internal hash used to track the matches in RESULT."
   (cdar result))
-
-(defun grizzl-result-count (result)
-  "Returns the number of matches present in RESULT."
-  (hash-table-count (grizzl-result-matches result)))
 
 (defun grizzl-index-insert (string list-offset index)
   "Inserts STRING at LIST-OFFSET into INDEX."
