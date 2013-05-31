@@ -62,9 +62,9 @@
                            strings)) lookup-table)))
 
 ;;;###autoload
-(defun grizzl-search (term index old-result)
+(defun grizzl-search (term index &optional old-result)
   "Fuzzy searches for TERM in INDEX prepared with `grizzl-make-index'.
-If OLD-RESULT is non-nil, it is an existing search result to increment from.
+OLD-RESULT may be specified as an existing search result to increment from.
 The result can be read with `grizzl-result-strings'."
   (let* ((result (grizzl-rewind-result term index old-result))
          (matches (copy-hash-table (grizzl-result-matches result)))
@@ -86,23 +86,26 @@ The result can be read with `grizzl-result-strings'."
   (hash-table-count (grizzl-result-matches result)))
 
 ;;;###autoload
-(defun grizzl-result-strings (result index)
-  "Returns the ordered list of matched strings in RESULT, using INDEX."
+(defun grizzl-result-strings (result index &rest options)
+  "Returns the ordered list of matched strings in RESULT, using INDEX.
+If the :LIMIT option is specified, max :LIMIT results are returned.
+If the :START option is specified, results are read from the given offset."
   (let* ((matches (grizzl-result-matches result))
          (strings (grizzl-index-strings index))
-         (loaded '()))
+         (loaded '())
+         (limit (plist-get options :limit)))
     (maphash (lambda (string-offset char-offset)
                (push string-offset loaded))
              matches)
-    (let ((best (sort loaded (lambda (a b)
-                               (< (cdr (elt strings a))
-                                  (cdr (elt strings b)))))))
+    (let* ((ordered (sort loaded (lambda (a b)
+                                   (< (cdr (elt strings a))
+                                      (cdr (elt strings b))))))
+           (best (if limit
+                     (subseq ordered 0 limit)
+                   ordered)))
       (mapcar (lambda (n)
                 (car (elt strings n)))
               best))))
-
-
-
 
 ;;; --- Private Functions
 
