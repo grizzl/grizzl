@@ -57,7 +57,9 @@
                (maphash (lambda (list-offset locations)
                           (puthash list-offset (reverse locations) str-map))
                         str-map)) lookup-table)
-    (cons (vconcat strings) lookup-table)))
+    (cons (vconcat (mapcar (lambda (s)
+                             (cons s (length s)))
+                           strings)) lookup-table)))
 
 ;;;###autoload
 (defun grizzl-search (term index old-result)
@@ -89,11 +91,15 @@ The result can be read with `grizzl-result-strings'."
   (let* ((matches (grizzl-result-matches result))
          (strings (grizzl-index-strings index))
          (loaded '()))
-    ;; FIXME: There must be a sorting algorithm than can be combined with this map
     (maphash (lambda (string-offset char-offset)
-               (push (elt strings string-offset) loaded))
+               (push string-offset loaded))
              matches)
-    (sort loaded (lambda (a b) (< (length a) (length b))))))
+    (let ((best (sort loaded (lambda (a b)
+                               (< (cdr (elt strings a))
+                                  (cdr (elt strings b)))))))
+      (mapcar (lambda (n)
+                (car (elt strings n)))
+              best))))
 
 
 
