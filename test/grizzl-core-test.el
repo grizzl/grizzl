@@ -18,13 +18,15 @@
                (grizzl-result-strings (funcall search term
                                                (plist-get opts :prev))
                                       index
-                                      :limit (plist-get opts :limit))))
+                                      :start (plist-get opts :start)
+                                      :end   (plist-get opts :end))))
 
      (search-sort (lambda (term &rest opts)
                     "Search, and sort the result lexographically."
                     (sort (funcall search-read term
                                    (plist-get opts :prev)
-                                   :limit (plist-get opts :limit))
+                                   :start (plist-get opts :start)
+                                   :end   (plist-get opts :end))
                           #'string-lessp))))
 
   (ert-deftest initial-search-test ()
@@ -57,9 +59,15 @@
 
   (ert-deftest distance-ordering-test ()
     "Test grizzl orders the results by closest distance."
-    (should (equal (funcall search-read "oe")  '("models" "controllers")))
-    (should (equal (funcall search-read "es")  '("views" "models" "controllers"))))
+    (should (equal (funcall search-read "oe") '("models" "controllers")))
+    (should (equal (funcall search-read "es") '("views" "models" "controllers"))))
 
   (ert-deftest limit-results-test ()
     "Test can limit the number of results returned."
-    (should (equal (funcall search-read "es" :limit 2)  '("views" "models")))))
+    (should (equal (funcall search-read "es" :end 2)
+                   '("views" "models"))))
+
+  (ert-deftest offset-results-test ()
+    "Test can offset the start of results returned."
+    (should (equal (funcall search-read "es" :start 1)
+                   '("models" "controllers")))))

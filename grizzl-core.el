@@ -88,20 +88,22 @@ The result can be read with `grizzl-result-strings'."
 ;;;###autoload
 (defun grizzl-result-strings (result index &rest options)
   "Returns the ordered list of matched strings in RESULT, using INDEX.
-If the :LIMIT option is specified, max :LIMIT results are returned.
-If the :START option is specified, results are read from the given offset."
+If the :START option is specified, results are read from the given offset.
+If the :END option is specified, max :LIMIT results are returned."
   (let* ((matches (grizzl-result-matches result))
          (strings (grizzl-index-strings index))
          (loaded '())
-         (limit (plist-get options :limit)))
+         (start (plist-get options :start))
+         (end (plist-get options :end)))
     (maphash (lambda (string-offset char-offset)
                (push string-offset loaded))
              matches)
-    (let* ((ordered (sort loaded (lambda (a b)
-                                   (< (cdr (elt strings a))
-                                      (cdr (elt strings b))))))
-           (best (if limit
-                     (subseq ordered 0 limit)
+    (let* ((ordered (sort loaded
+                          (lambda (a b)
+                            (< (cdr (elt strings a))
+                               (cdr (elt strings b))))))
+           (best (if (or start end)
+                     (subseq ordered (or start 0) end)
                    ordered)))
       (mapcar (lambda (n)
                 (car (elt strings n)))
