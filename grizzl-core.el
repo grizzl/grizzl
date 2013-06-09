@@ -89,7 +89,7 @@ The result can be read with `grizzl-result-strings'."
 (defun grizzl-result-strings (result index &rest options)
   "Returns the ordered list of matched strings in RESULT, using INDEX.
 If the :START option is specified, results are read from the given offset.
-If the :END option is specified, max :LIMIT results are returned."
+If the :END option is specified, up to :END results are returned."
   (let* ((matches (grizzl-result-matches result))
          (strings (grizzl-index-strings index))
          (loaded '())
@@ -103,7 +103,8 @@ If the :END option is specified, max :LIMIT results are returned."
                             (< (cdr (elt strings a))
                                (cdr (elt strings b))))))
            (best (if (or start end)
-                     (subseq ordered (or start 0) end)
+                     (delete-if-not 'identity
+                                    (subseq ordered (or start 0) end))
                    ordered)))
       (mapcar (lambda (n)
                 (car (elt strings n)))

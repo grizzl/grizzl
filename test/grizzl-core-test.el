@@ -72,6 +72,11 @@
     (should (equal (funcall search-read "es" :start 1)
                    '("models" "controllers"))))
 
+  (ert-deftest out-of-bounds-limit-results-test ()
+    "Test grizzl silently ignores limits > result count."
+    (should (equal (funcall search-read "es" :end 7)
+                   '("views" "models" "controllers"))))
+
   (ert-deftest offset-and-limit-results-test ()
     "Test grizzl can offset the start of results returned and limit them."
     (should (equal (funcall search-read "es" :start 1 :end 2)
