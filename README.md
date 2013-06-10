@@ -8,7 +8,7 @@ matched).
 
 There are two parts to the library:
 
-  1. grizzl-core.el, which provides the algorithm is is not interactive
+  1. grizzl-core.el, which provides the algorithm and is not interactive
   2. grizzl-read.el, which wraps the algorithm with a completing-read
 
 ## Usage
