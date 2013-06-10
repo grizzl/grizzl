@@ -45,11 +45,15 @@
 ;;; --- Public Functions
 
 ;;;###autoload
-(defun grizzl-make-index (strings)
-  "Makes an index from the list STRINGS for use with `grizzl-search'."
-  (let ((lookup-table (make-hash-table)))
+(defun grizzl-make-index (strings &optional progress-fn)
+  "Makes an index from the list STRINGS for use with `grizzl-search'.
+If PROGRESS-FN is given, it is called repeatedly with integers N and TOTAL."
+  (let ((lookup-table (make-hash-table))
+        (total-strs (length strings)))
     (reduce (lambda (list-offset str)
               (grizzl-index-insert str list-offset lookup-table)
+              (when progress-fn
+                (funcall progress-fn (1+ list-offset) total-strs))
               (1+ list-offset))
             strings
             :initial-value 0)
