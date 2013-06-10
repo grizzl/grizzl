@@ -28,7 +28,7 @@ it may be better to just create an index on the fly.
 
 ``` lisp
 ;; define a search index
-(defvar *search-index* (grizzl-make-index '("one" "two" three" "four")))
+(defvar *search-index* (grizzl-make-index '("one" "two" "three" "four")))
 
 ;; prompt the use to pick from the index
 (grizzl-completing-read "Number: " *search-index*)
