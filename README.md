@@ -1,5 +1,7 @@
 # Grizzl - A fuzzy-search utility for Emacs
 
+![Screenshot](http://i.imgur.com/n3EweV3.png)
+
 Grizzl is a small utility library to be used in other Elisp code needing
 fuzzy search behaviour. It is optimized for large data sets, using a
 special type of lookup table and supporting incremental searches (searches
