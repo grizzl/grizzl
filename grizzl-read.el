@@ -88,11 +88,10 @@ Each key pressed in the minibuffer filters down the list of matches."
                         (grizzl-display-result index)))
              (exitfun (lambda ()
                         (grizzl-mode -1)
-                        (remove-hook 'post-command-hook    hookfun t)
-                        (remove-hook 'minibuffer-exit-hook exitfun t))))
+                        (remove-hook 'post-command-hook    hookfun t))))
           (add-hook 'minibuffer-exit-hook exitfun nil t)
           (add-hook 'post-command-hook    hookfun nil t)))
-    (read-from-minibuffer ">>> ") ;; FIXME: This may not even be needed
+    (read-from-minibuffer ">>> ")
     (grizzl-selected-result index)))
 
 ;;;###autoload
@@ -117,23 +116,25 @@ Each key pressed in the minibuffer filters down the list of matches."
 
 ;;; --- Private Functions
 
+;; FIXME: All this presentation logic needs cleaning up
 (defun grizzl-display-result (index)
   "Renders a series of overlays to list the matches in the result."
+  (delete-all-overlays)
   (let ((selection (grizzl-current-selection))
+        (overlay (make-overlay (point-min) (point-min)))
+        (formatted '())
         (strings (grizzl-result-strings *grizzl-current-result* index
                                         :start 0
                                         :end   *grizzl-read-max-results*)))
-    (delete-all-overlays)
     (reduce (lambda (n s)
-              (let ((margin (if (= n (grizzl-current-selection))
-                                "> "
-                              "  ")))
-                (overlay-put (make-overlay (point-min) (point-min))
-                             'before-string
-                             (format "%s%s\n" margin s))
-                (1+ n)))
+              (if (= n (grizzl-current-selection))
+                  (push (propertize (format "> %s\n" s) 'face 'diredp-symlink) formatted)
+                (push (propertize (format "  %s\n" s) 'face 'default) formatted))
+                (1+ n))
             strings
-            :initial-value 0)))
+            :initial-value 0)
+    (overlay-put overlay 'before-string (mapconcat 'identity formatted ""))
+    (set-window-text-height nil (+ 1 (length strings)))))
 
 (defun grizzl-current-selection ()
   "Get the currently selected index in `grizzl-completing-read'."
