@@ -85,7 +85,7 @@ Each key pressed in the minibuffer filters down the list of matches."
                               (grizzl-search (minibuffer-contents)
                                              index
                                              *grizzl-current-result*))
-                        (grizzl-display-result index)))
+                        (grizzl-display-result index prompt)))
              (exitfun (lambda ()
                         (grizzl-mode -1)
                         (remove-hook 'post-command-hook    hookfun t))))
@@ -106,35 +106,67 @@ Each key pressed in the minibuffer filters down the list of matches."
 (defun grizzl-set-selection+1 ()
   "Move the selection up one row in `grizzl-completing-read'."
   (interactive)
-  (setq *grizzl-current-selection* (1+ (grizzl-current-selection))))
+  (grizzl-move-selection 1))
 
 ;;;###autoload
 (defun grizzl-set-selection-1 ()
   "Move the selection down one row in `grizzl-completing-read'."
   (interactive)
-  (setq *grizzl-current-selection* (1- (grizzl-current-selection))))
+  (grizzl-move-selection -1))
 
 ;;; --- Private Functions
 
-;; FIXME: All this presentation logic needs cleaning up
-(defun grizzl-display-result (index)
+(defun grizzl-move-selection (delta)
+  "Move the selection by DELTA rows in `grizzl-completing-read'."
+  (setq *grizzl-current-selection* (+ (grizzl-current-selection) delta))
+  (when (not (= (grizzl-current-selection) *grizzl-current-selection*))
+    (beep)))
+
+(defun grizzl-display-result (index prompt)
   "Renders a series of overlays to list the matches in the result."
-  (delete-all-overlays)
-  (let ((selection (grizzl-current-selection))
-        (overlay (make-overlay (point-min) (point-min)))
-        (formatted '())
-        (strings (grizzl-result-strings *grizzl-current-result* index
-                                        :start 0
-                                        :end   *grizzl-read-max-results*)))
-    (reduce (lambda (n s)
-              (if (= n (grizzl-current-selection))
-                  (push (propertize (format "> %s\n" s) 'face 'diredp-symlink) formatted)
-                (push (propertize (format "  %s\n" s) 'face 'default) formatted))
-                (1+ n))
-            strings
-            :initial-value 0)
-    (overlay-put overlay 'before-string (mapconcat 'identity formatted ""))
-    (set-window-text-height nil (+ 1 (length strings)))))
+  (let* ((matches (grizzl-result-strings *grizzl-current-result* index
+                                         :start 0
+                                         :end   *grizzl-read-max-results*)))
+    (delete-all-overlays)
+    (overlay-put (make-overlay (point-min) (point-min))
+                 'before-string
+                 (format "%s\n%s\n"
+                         (mapconcat 'identity
+                                    (grizzl-map-format-matches matches)
+                                    "\n")
+                         (grizzl-format-prompt-line prompt)))
+    (set-window-text-height nil (+ 2 (length matches)))))
+
+(defun grizzl-map-format-matches (matches)
+  "Convert the set of string MATCHES into propertized text objects."
+  (cdr (reduce (lambda (acc str)
+                 (let* ((idx (car acc))
+                        (lst (cdr acc))
+                        (sel (= idx (grizzl-current-selection))))
+                   (cons (1+ idx)
+                         (cons (grizzl-format-match str sel) lst))))
+               matches
+               :initial-value '(0))))
+
+(defun grizzl-format-match (match-str selected)
+  "Default match string formatter in `grizzl-completing-read'.
+MATCH-STR is the string in the selection list and SELECTED is non-nil
+if this is the current selection."
+  (let ((margin (if selected "> "            "  "))
+        (face   (if selected 'diredp-symlink 'default)))
+    (propertize (format "%s%s" margin match-str) 'face face)))
+
+(defun grizzl-format-prompt-line (prompt)
+  "Returns a string to render a full-width prompt in `grizzl-completing-read'."
+  (let* ((count (grizzl-result-count *grizzl-current-result*))
+         (match-info (format " (%d candidate%s) ---- *-"
+                             count (if (= count 1) "" "s"))))
+    (concat (propertize (format "-*%s *-" prompt) 'face 'modeline-inactive)
+            (propertize " "
+                        'face    'modeline-inactive
+                        'display `(space :align-to (- right-margin
+                                                      ,(1+ (length match-info)))))
+            (propertize match-info 'face 'modeline-inactive))))
 
 (defun grizzl-current-selection ()
   "Get the currently selected index in `grizzl-completing-read'."
