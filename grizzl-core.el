@@ -104,8 +104,8 @@ If the :END option is specified, up to :END results are returned."
              matches)
     (let* ((ordered (sort loaded
                           (lambda (a b)
-                            (< (cdr (elt strings a))
-                               (cdr (elt strings b))))))
+                            (< (cadr (gethash a matches))
+                               (cadr (gethash b matches))))))
            (best (if (or start end)
                      (delete-if-not 'identity
                                     (subseq ordered (or start 0) end))
@@ -135,8 +135,11 @@ If the :END option is specified, up to :END results are returned."
 (defun grizzl-base-matches (index)
   "Returns the full set of matches in INDEX, with an out-of-bound offset."
   (let ((matches (make-hash-table)))
-    (dotimes (n (length (grizzl-index-strings index)))
-      (puthash n -1 matches))
+    (reduce (lambda (n s-len)
+              (puthash n (list -1 0 (cdr s-len)) matches)
+              (1+ n))
+            (grizzl-index-strings index)
+            :initial-value 0)
     matches))
 
 (defun grizzl-result-term (result)
@@ -175,11 +178,22 @@ If the :END option is specified, up to :END results are returned."
                          (> v current))
                        (gethash key sub-table))))
     (maphash (lambda (k v)
-               (let ((offset (next-offset k v sub-table)))
-                 (if offset
-                     (puthash k offset result)
+               (let* ((oldpos (car v))
+                      (oldrank (cadr v))
+                      (len (caddr v))
+                      (newpos (next-offset k oldpos sub-table)))
+                 (if newpos
+                     (puthash k (list newpos
+                                      (grizzl-inc-rank oldrank oldpos newpos len)
+                                      len)
+                              result)
                    (remhash k result))))
              result)))
+
+(defun grizzl-inc-rank (oldrank oldpos newpos len)
+  "Increment the current match distance as a new char is matched."
+  (let ((distance (if (< oldpos 0) 1 (- newpos oldpos))))
+    (+ oldrank (* len (* distance distance)))))
 
 (provide 'grizzl-core)
 

@@ -7,7 +7,7 @@
 (require 'grizzl-core)
 
 (lexical-let*
-    ((index (grizzl-make-index '("models" "controllers" "views")))
+    ((index (grizzl-make-index '("models" "controllers" "views" "registry")))
 
      (search (lambda (term &rest opts)
                "Perform a search and nothing more."
@@ -37,7 +37,7 @@
                    '("views")))
     (should (equal (funcall search-sort "bad") '()))
     (should (equal (funcall search-sort "es")
-                   '("controllers" "models" "views"))))
+                   '("controllers" "models" "registry" "views"))))
 
   (ert-deftest increment-search-append-test ()
     "Test grizzl can accept an existing result and search string to search."
@@ -57,10 +57,14 @@
       (should (equal (funcall search-sort "ers" :prev prev)
                      '("controllers")))))
 
-  (ert-deftest distance-ordering-test ()
-    "Test grizzl orders the results by closest distance."
-    (should (equal (funcall search-read "oe") '("models" "controllers")))
-    (should (equal (funcall search-read "es") '("views" "models" "controllers"))))
+  (ert-deftest length-ordering-test ()
+    "Test grizzl orders the results by shortest length."
+    (should (equal (funcall search-read "oe") '("models" "controllers"))))
+
+  (ert-deftest proximity-scoring-test ()
+    "Test grizzl factors in proximity of matched letters."
+    (should (equal (funcall search-read "es")
+                   '("views" "models" "controllers" "registry"))))
 
   (ert-deftest limit-results-test ()
     "Test grizzl can limit the number of results returned."
@@ -70,12 +74,12 @@
   (ert-deftest offset-results-test ()
     "Test grizzl can offset the start of results returned."
     (should (equal (funcall search-read "es" :start 1)
-                   '("models" "controllers"))))
+                   '("models" "controllers" "registry"))))
 
   (ert-deftest out-of-bounds-limit-results-test ()
     "Test grizzl silently ignores limits > result count."
     (should (equal (funcall search-read "es" :end 7)
-                   '("views" "models" "controllers"))))
+                   '("views" "models" "controllers" "registry"))))
 
   (ert-deftest offset-and-limit-results-test ()
     "Test grizzl can offset the start of results returned and limit them."
