@@ -45,6 +45,16 @@ arrow keys. The user hits <kbd>ENTER</kbd> to select the matching result.
 If a match was successfully selected, `grizzl-completing-read` returns it
 as a string. If not, it returns nil.
 
+Grizzl is case-insensitive by-default. To make it case-sensitive, specify
+`:case-sensitive t` when creating the index.
+
+``` lisp
+(grizzl-make-index '("One" "TWO" "three" "Four") :case-sensitive t)
+```
+
+No further settings are required for case-sensitivity; the index does the
+work.
+
 ### Using the algorithm non-interactively
 
 Grizzl aims to be small and focused, so that it can be used in other
@@ -71,7 +81,7 @@ The returned data structure is used in other Grizzl functions.
 If the data set is particularly large, the index may take a few seconds to
 build, during which time Emacs will appear non-responsive. You can observe
 the progress building the index by passing a callback function as the
-second argument to `grizzl-make-index`. The callback receives two arguments,
+keyword argument `:PROGRESS-FN`. The callback receives two arguments,
 `N` and `TOTAL`, where `N` is the number of items processed so far and
 `TOTAL` is the number of items to be processed.
 
@@ -79,13 +89,21 @@ The following example shows the progress to the user as indexing is done.
 
 ``` lisp
 (grizzl-make-index huge-list-of-strings
-                   (lambda (n total)
-                     (message (format "Indexed %d/%d" n total))))
+                   :progress-fn (lambda (n total)
+                                  (message (format "Indexed %d/%d" n total))))
 ```
 
 Of course, in a real-world implementation you'll probably only update the
 message area every 1000 or so items to avoid flooding the \*Messages\*
 buffer.
+
+Indexes are case-insensitive by default, for the most-effective fuzzy-matching
+in most cases. If you need a case-sensitive index, specify a non-nil keyword
+argument `:CASE-SENSITIVE`.
+
+``` lisp
+(grizzl-make-index '("One" "TWO" "three" "Four") :case-sensitive t)
+```
 
 #### Searching
 

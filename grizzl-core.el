@@ -32,7 +32,9 @@
 ;; on each key press and feed that result into the search for the next
 ;; key press. Once a search is complete, the matched strings are then
 ;; read, using `grizzl-result-strings'. The results are ordered on the
-;; Levenshtein distance between them and the search term.
+;; a combination of the Levenshtein Distance and a character-proximity
+;; scoring calculation. This means shorter strings are favoured, but
+;; adjacent letters are more heavily favoured.
 ;;
 ;; It is assumed that the index will be re-used across multiple
 ;; searches on larger sets of data.
@@ -45,13 +47,24 @@
 ;;; --- Public Functions
 
 ;;;###autoload
-(defun grizzl-make-index (strings &optional progress-fn)
+(defun grizzl-make-index (strings &rest options)
   "Makes an index from the list STRINGS for use with `grizzl-search'.
-If PROGRESS-FN is given, it is called repeatedly with integers N and TOTAL."
+
+If :PROGRESS-FN is given as a keyword argument, it is called repeatedly
+with integers N and TOTAL.
+
+If :CASE-SENSITIVE is specified as a non-nil keyword argument, the index
+will be created case-sensitive, otherwise it will be case-insensitive."
   (let ((lookup-table (make-hash-table))
-        (total-strs (length strings)))
+        (total-strs (length strings))
+        (case-sensitive (plist-get options :case-sensitive))
+        (progress-fn (plist-get options :progress-fn))
+        (string-data (vconcat (mapcar (lambda (s)
+                                        (cons s (length s)))
+                                      strings))))
     (reduce (lambda (list-offset str)
-              (grizzl-index-insert str list-offset lookup-table)
+              (grizzl-index-insert str list-offset lookup-table
+                                   :case-sensitive case-sensitive)
               (when progress-fn
                 (funcall progress-fn (1+ list-offset) total-strs))
               (1+ list-offset))
@@ -61,26 +74,30 @@ If PROGRESS-FN is given, it is called repeatedly with integers N and TOTAL."
                (maphash (lambda (list-offset locations)
                           (puthash list-offset (reverse locations) str-map))
                         str-map)) lookup-table)
-    (cons (vconcat (mapcar (lambda (s)
-                             (cons s (length s)))
-                           strings)) lookup-table)))
+    `((case-sensitive . ,case-sensitive)
+      (lookup-table   . ,lookup-table)
+      (string-data    . ,string-data))))
 
 ;;;###autoload
 (defun grizzl-search (term index &optional old-result)
   "Fuzzy searches for TERM in INDEX prepared with `grizzl-make-index'.
+
 OLD-RESULT may be specified as an existing search result to increment from.
 The result can be read with `grizzl-result-strings'."
-  (let* ((result (grizzl-rewind-result term index old-result))
+  (let* ((cased-term (if (grizzl-index-case-sensitive-p index)
+                         term
+                       (downcase term)))
+         (result (grizzl-rewind-result cased-term index old-result))
          (matches (copy-hash-table (grizzl-result-matches result)))
          (from-pos (length (grizzl-result-term result)))
-         (remainder (substring term from-pos))
+         (remainder (substring cased-term from-pos))
          (lookup-table (grizzl-lookup-table index)))
     (reduce (lambda (acc-res ch)
               (let ((sub-table (gethash ch lookup-table)))
                 (if (not sub-table)
                     (clrhash matches)
                   (grizzl-search-increment sub-table matches))
-                (grizzl-cons-result term matches acc-res)))
+                (grizzl-cons-result cased-term matches acc-res)))
             remainder
             :initial-value result)))
 
@@ -92,6 +109,7 @@ The result can be read with `grizzl-result-strings'."
 ;;;###autoload
 (defun grizzl-result-strings (result index &rest options)
   "Returns the ordered list of matched strings in RESULT, using INDEX.
+
 If the :START option is specified, results are read from the given offset.
 If the :END option is specified, up to :END results are returned."
   (let* ((matches (grizzl-result-matches result))
@@ -150,26 +168,34 @@ If the :END option is specified, up to :END results are returned."
   "Returns the internal hash used to track the matches in RESULT."
   (cdar result))
 
-(defun grizzl-index-insert (string list-offset index)
+(defun grizzl-index-insert (string list-offset index &rest options)
   "Inserts STRING at LIST-OFFSET into INDEX."
-  (reduce (lambda (char-offset char)
-            (let* ((str-map (or (gethash char index)
-                                (puthash char (make-hash-table) index)))
-                   (offsets (gethash list-offset str-map)))
-              (puthash list-offset
-                       (cons char-offset offsets)
-                       str-map)
-              (1+ char-offset)))
-          string
-          :initial-value 0))
+  (let ((case-sensitive (plist-get options :case-sensitive)))
+    (reduce (lambda (char-offset cs-char)
+              (let* ((char (if case-sensitive
+                               cs-char
+                             (downcase cs-char)))
+                     (str-map (or (gethash char index)
+                                  (puthash char (make-hash-table) index)))
+                     (offsets (gethash list-offset str-map)))
+                (puthash list-offset
+                         (cons char-offset offsets)
+                         str-map)
+                (1+ char-offset)))
+            string
+            :initial-value 0)))
 
 (defun grizzl-lookup-table (index)
   "Returns the lookup table portion of INDEX."
-  (cdr index))
+  (cdr (assoc 'lookup-table index)))
 
 (defun grizzl-index-strings (index)
   "Returns the vector of strings stored in INDEX."
-  (car index))
+  (cdr (assoc 'string-data index)))
+
+(defun grizzl-index-case-sensitive-p (index)
+  "Predicate to test of INDEX is case-sensitive."
+  (cdr (assoc 'case-sensitive index)))
 
 (defun grizzl-search-increment (sub-table result)
   "Use the search lookup table to filter already-accumulated results."
