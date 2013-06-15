@@ -135,21 +135,24 @@ Each key pressed in the minibuffer filters down the list of matches."
                                     (grizzl-map-format-matches matches)
                                     "\n")
                          (grizzl-format-prompt-line prompt)))
-    (set-window-text-height nil (+ 2 (length matches)))))
+    (set-window-text-height nil (max 3 (+ 2 (length matches))))))
 
 (defun grizzl-map-format-matches (matches)
   "Convert the set of string MATCHES into propertized text objects."
-  (cdr (reduce (lambda (acc str)
-                 (let* ((idx (car acc))
-                        (lst (cdr acc))
-                        (sel (= idx (grizzl-current-selection))))
-                   (cons (1+ idx)
-                         (cons (grizzl-format-match str sel) lst))))
-               matches
-               :initial-value '(0))))
+  (if (= 0 (length matches))
+      (list (propertize "-- NO MATCH --" 'face 'outline-3))
+    (cdr (reduce (lambda (acc str)
+                   (let* ((idx (car acc))
+                          (lst (cdr acc))
+                          (sel (= idx (grizzl-current-selection))))
+                     (cons (1+ idx)
+                           (cons (grizzl-format-match str sel) lst))))
+                 matches
+                 :initial-value '(0)))))
 
 (defun grizzl-format-match (match-str selected)
   "Default match string formatter in `grizzl-completing-read'.
+
 MATCH-STR is the string in the selection list and SELECTED is non-nil
 if this is the current selection."
   (let ((margin (if selected "> "            "  "))
