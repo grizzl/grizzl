@@ -80,6 +80,11 @@
     (should (equal (funcall search-read "es")
                    '("Views" "Models" "Controllers" "Registry"))))
 
+;  (ert-deftest ambiguous-proximity-scoring-test ()
+;    "Test grizzl picks the closest letters for proximity scoring."
+;    (should (equal (funcall search-read "ol")
+;                   '("Controllers" "Models"))))
+
   (ert-deftest limit-results-test ()
     "Test grizzl can limit the number of results returned."
     (should (equal (funcall search-read "es" :end 2)

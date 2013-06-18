@@ -167,7 +167,7 @@ if this is the current selection."
     (concat (propertize (format "-*%s *-" prompt) 'face 'modeline-inactive)
             (propertize " "
                         'face    'modeline-inactive
-                        'display `(space :align-to (- right-margin
+                        'display `(space :align-to (- right
                                                       ,(1+ (length match-info)))))
             (propertize match-info 'face 'modeline-inactive))))
 
