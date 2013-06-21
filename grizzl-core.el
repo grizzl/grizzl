@@ -39,7 +39,6 @@
 ;; It is assumed that the index will be re-used across multiple
 ;; searches on larger sets of data.
 ;;
-;; A discussion of the algorithm can be found in the docs/ directory.
 ;;
 
 (require 'cl)
