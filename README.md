@@ -36,11 +36,13 @@ it may be better to just create an index on the fly.
 (grizzl-completing-read "Number: " *search-index*)
 ```
 
-The user is presented with the minibuffer and a list of matches, starting
-with all possible matches. As the user types, the list is reduced by
-repeatedly fuzzy searching in the index. The selection within the matched
-results can be changed by using the <kbd>UP</kbd> and <kbd>DOWN</kbd>
-arrow keys. The user hits <kbd>ENTER</kbd> to select the matching result.
+The user is presented with the minibuffer and a list of matches,
+starting with all possible matches. As the user types, the list is
+reduced by repeatedly fuzzy searching in the index. The selection
+within the matched results can be changed by using the <kbd>UP</kbd>
+and <kbd>DOWN</kbd> arrow keys or <kbd>C-p</kbd> and
+<kbd>C-n</kbd>. The user hits <kbd>ENTER</kbd> to select the matching
+result.
 
 If a match was successfully selected, `grizzl-completing-read` returns it
 as a string. If not, it returns nil.
