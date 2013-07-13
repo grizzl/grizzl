@@ -6,7 +6,7 @@ FILES   = grizzl-core.el grizzl-read.el grizzl.el grizzl-pkg.el README.md
 all: units package
 
 units:
-	emacs -batch -l ert -l grizzl-core.el -l test/grizzl-core-test.el -f ert-run-tests-batch-and-exit
+	emacs -batch -l ert -l cl -l grizzl-core.el -l test/grizzl-core-test.el -f ert-run-tests-batch-and-exit
 
 reversion:
 	perl -pi -e "s/$(OLDVER)/$(NEWVER)/g" *.el

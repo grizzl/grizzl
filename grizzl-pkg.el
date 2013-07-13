@@ -14,4 +14,5 @@
 ;; Licensed under the same terms as Emacs.
 
 (define-package "grizzl" "0.1.1"
-  "Fuzzy Search Library & Completing Read")
+  "Fuzzy Search Library & Completing Read"
+  '((cl-lib "0.1")))

@@ -39,7 +39,8 @@
 ;; The arrow keys can be used to navigate within the results.
 ;;
 
-(require 'cl)
+(eval-when-compile
+  (require 'cl-lib))
 
 ;;; --- Configuration Variables
 
@@ -60,10 +61,9 @@
   "Internal keymap used by the minor-mode in `grizzl-completing-read'.")
 
 (define-key *grizzl-keymap* (kbd "<up>")   'grizzl-set-selection+1)
+(define-key *grizzl-keymap* (kbd "C-p")    'grizzl-set-selection+1)
 (define-key *grizzl-keymap* (kbd "<down>") 'grizzl-set-selection-1)
-
-(define-key *grizzl-keymap* (kbd "C-p") 'grizzl-set-selection+1)
-(define-key *grizzl-keymap* (kbd "C-n") 'grizzl-set-selection-1)
+(define-key *grizzl-keymap* (kbd "C-n")    'grizzl-set-selection-1)
 
 (define-minor-mode grizzl-mode
   "Toggle the internal mode used by `grizzl-completing-read'."
