@@ -55,6 +55,16 @@
 (defvar *grizzl-current-selection* 0
   "The selected offset in `grizzl-completing-read'.")
 
+(defface grizzl-selection-face
+  `((((class color) (background light))
+     (:foreground "red"))
+    (((class color) (background dark))
+     (:foreground "red"))
+    (t (:foreground "red")))
+  "Face for selected result."
+  :group 'grizzl-mode)
+
+
 ;;; --- Minor Mode Definition
 
 (defvar *grizzl-keymap* (make-sparse-keymap)
@@ -159,7 +169,7 @@ Each key pressed in the minibuffer filters down the list of matches."
 MATCH-STR is the string in the selection list and SELECTED is non-nil
 if this is the current selection."
   (let ((margin (if selected "> "            "  "))
-        (face   (if selected 'diredp-symlink 'default)))
+        (face   (if selected 'grizzl-selection-face 'default)))
     (propertize (format "%s%s" margin match-str) 'face face)))
 
 (defun grizzl-format-prompt-line (prompt)
