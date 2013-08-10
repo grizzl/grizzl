@@ -144,14 +144,14 @@ Each key pressed in the minibuffer filters down the list of matches."
   "Convert the set of string MATCHES into propertized text objects."
   (if (= 0 (length matches))
       (list (propertize "-- NO MATCH --" 'face 'outline-3))
-    (cdr (reduce (lambda (acc str)
-                   (let* ((idx (car acc))
-                          (lst (cdr acc))
-                          (sel (= idx (grizzl-current-selection))))
-                     (cons (1+ idx)
-                           (cons (grizzl-format-match str sel) lst))))
-                 matches
-                 :initial-value '(0)))))
+    (cdr (cl-reduce (lambda (acc str)
+                      (let* ((idx (car acc))
+                             (lst (cdr acc))
+                             (sel (= idx (grizzl-current-selection))))
+                        (cons (1+ idx)
+                              (cons (grizzl-format-match str sel) lst))))
+                    matches
+                    :initial-value '(0)))))
 
 (defun grizzl-format-match (match-str selected)
   "Default match string formatter in `grizzl-completing-read'.

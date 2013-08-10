@@ -62,14 +62,14 @@ will be created case-sensitive, otherwise it will be case-insensitive."
         (string-data (vconcat (mapcar (lambda (s)
                                         (cons s (length s)))
                                       strings))))
-    (reduce (lambda (list-offset str)
-              (grizzl-index-insert str list-offset lookup-table
-                                   :case-sensitive case-sensitive)
-              (when progress-fn
-                (funcall progress-fn (1+ list-offset) total-strs))
-              (1+ list-offset))
-            strings
-            :initial-value 0)
+    (cl-reduce (lambda (list-offset str)
+                 (grizzl-index-insert str list-offset lookup-table
+                                      :case-sensitive case-sensitive)
+                 (when progress-fn
+                   (funcall progress-fn (1+ list-offset) total-strs))
+                 (1+ list-offset))
+               strings
+               :initial-value 0)
     (maphash (lambda (char str-map)
                (maphash (lambda (list-offset locations)
                           (puthash list-offset (reverse locations) str-map))
@@ -92,14 +92,14 @@ The result can be read with `grizzl-result-strings'."
          (from-pos (length (grizzl-result-term result)))
          (remainder (substring cased-term from-pos))
          (lookup-table (grizzl-lookup-table index)))
-    (reduce (lambda (acc-res ch)
-              (let ((sub-table (gethash ch lookup-table)))
-                (if (not sub-table)
-                    (clrhash matches)
-                  (grizzl-search-increment sub-table matches))
-                (grizzl-cons-result cased-term matches acc-res)))
-            remainder
-            :initial-value result)))
+    (cl-reduce (lambda (acc-res ch)
+                 (let ((sub-table (gethash ch lookup-table)))
+                   (if (not sub-table)
+                       (clrhash matches)
+                     (grizzl-search-increment sub-table matches))
+                   (grizzl-cons-result cased-term matches acc-res)))
+               remainder
+               :initial-value result)))
 
 ;;;###autoload
 (defun grizzl-result-count (result)
@@ -153,11 +153,11 @@ If the :END option is specified, up to :END results are returned."
 (defun grizzl-base-matches (index)
   "Returns the full set of matches in INDEX, with an out-of-bound offset."
   (let ((matches (make-hash-table)))
-    (reduce (lambda (n s-len)
-              (puthash n (list -1 0 (cdr s-len)) matches)
-              (1+ n))
-            (grizzl-index-strings index)
-            :initial-value 0)
+    (cl-reduce (lambda (n s-len)
+                 (puthash n (list -1 0 (cdr s-len)) matches)
+                 (1+ n))
+               (grizzl-index-strings index)
+               :initial-value 0)
     matches))
 
 (defun grizzl-result-term (result)
@@ -171,19 +171,19 @@ If the :END option is specified, up to :END results are returned."
 (defun grizzl-index-insert (string list-offset index &rest options)
   "Inserts STRING at LIST-OFFSET into INDEX."
   (let ((case-sensitive (plist-get options :case-sensitive)))
-    (reduce (lambda (char-offset cs-char)
-              (let* ((char (if case-sensitive
-                               cs-char
-                             (downcase cs-char)))
-                     (str-map (or (gethash char index)
-                                  (puthash char (make-hash-table) index)))
-                     (offsets (gethash list-offset str-map)))
-                (puthash list-offset
-                         (cons char-offset offsets)
-                         str-map)
-                (1+ char-offset)))
-            string
-            :initial-value 0)))
+    (cl-reduce (lambda (char-offset cs-char)
+                 (let* ((char (if case-sensitive
+                                  cs-char
+                                (downcase cs-char)))
+                        (str-map (or (gethash char index)
+                                     (puthash char (make-hash-table) index)))
+                        (offsets (gethash list-offset str-map)))
+                   (puthash list-offset
+                            (cons char-offset offsets)
+                            str-map)
+                   (1+ char-offset)))
+               string
+               :initial-value 0)))
 
 (defun grizzl-lookup-table (index)
   "Returns the lookup table portion of INDEX."
