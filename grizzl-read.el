@@ -190,9 +190,8 @@
          (selection (- grizzl-read-max grizzl-read-selection))
          (count lines)
          formated-string)
+    (setq grizzl-selected-result (nth selection item))
     (while (> count 0)
-      (and (= selection count)
-           (setq grizzl-selected-result (car item)))
       (setq formated-string (concat formated-string
                                     (if (= selection count)
                                         (propertize (format "> %s" (car item))
