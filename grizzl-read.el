@@ -65,6 +65,7 @@
 ;; * Add grizzl group.
 ;; * Support face customization.
 ;; * Support scrollable result display in minibuffer.
+;; * Support `grizzl-read-update-hook' to info hooks the current result.
 ;; * Slightly improve performance by using idle timer to do searching job instead
 ;;   of do it in post-command.
 ;; * Remove `cl' dependency.
@@ -92,12 +93,17 @@
   "Default face for highlighting keyword in definition window."
   :group 'grizzl)
 
+(defcustom grizzl-read-update-hook nil
+  "A hook triggered at selection changed in `grizzl-completing-read'."
+  :type '(repeat function)
+  :group 'grizzl)
+
 (defcustom grizzl-read-display-lines 10
   "The maximum number of results to show in `grizzl-completing-read'."
   :type 'integer
   :group 'grizzl)
 
-(defcustom grizzl-idle-delay 0.2
+(defcustom grizzl-search-delay 0.2
   "The maximum number of results to show in `grizzl-completing-read'."
   :type 'integer
   :group 'grizzl)
@@ -220,7 +226,9 @@
           grizzl-read-min 0
           grizzl-read-max (min grizzl-read-display-lines
                                (grizzl-result-count grizzl-result)))
-    (grizzl-display-result)))
+    (grizzl-display-result))
+  ;; Pass selected result to hooks in `grizzl-read-update-hook'.
+  (run-hook-with-args 'grizzl-read-update-hook grizzl-selected-result))
 
 (defun grizzl-exit ()
   (grizzl-mode -1))
@@ -232,7 +240,7 @@
     (error "The grizzl-mode is only for minibuffer!"))
   (if grizzl-mode
       (progn
-        (setq grizzl-read-timer (run-with-idle-timer grizzl-idle-delay t
+        (setq grizzl-read-timer (run-with-idle-timer grizzl-search-delay t
                                                 'grizzl-begin-search))
         (add-hook 'post-command-hook 'grizzl-display-result nil t)
         (add-hook 'minibuffer-exit-hook 'grizzl-exit nil t))
