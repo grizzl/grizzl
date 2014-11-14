@@ -253,16 +253,13 @@
 ;; Public Functions ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;;;###autoload
-(defun grizzl-completing-read (prompt strings)
+(defun grizzl-completing-read-database (prompt database)
   "Performs a completing-read in the minibuffer using INDEX to fuzzy search.
 Each key pressed in the minibuffer filters down the list of matches."
-  ;; TODO: (prompt database-or-fetcher)
   (unless (stringp prompt)
     (error "PROMPT must be a string!"))
-  (unless (listp strings)
-    (error "STRINGS must be a string list!"))
   (setq grizzl-read-prompt prompt
-        grizzl-read-database (grizzl-make-database strings)
+        grizzl-read-database database
         grizzl-read-string nil)
   (minibuffer-with-setup-hook
       (lambda ()
@@ -271,6 +268,13 @@ Each key pressed in the minibuffer filters down the list of matches."
         (grizzl-begin-search))
     (read-from-minibuffer ">>> ")
     grizzl-selected-result))
+
+;;;###autoload
+(defun grizzl-completing-read (prompt strings)
+  "Performs a completing-read in the minibuffer using INDEX to fuzzy search.
+Each key pressed in the minibuffer filters down the list of matches."
+  (grizzl-completing-read-database prompt
+                                   (grizzl-make-database strings)))
 
 ;;;###autoload
 (defvar grizzl-selected-result nil

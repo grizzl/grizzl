@@ -30,8 +30,13 @@ search index will be re-used, though it need not be. For small data sets
 it may be better to just create an index on the fly.
 
 ``` lisp
-;; prompt the use to pick from the index
+;; prompt the use to pick from the strings list.
 (grizzl-completing-read "Number: " '("one" "two" "three" "four"))
+
+;; Or for the performance, you might want to build database first.
+(setq database (grizzl-make-database '("one" "two" "three" "four")))
+;; And call completing API later.
+(grizzl-completing-read-database "Number: " database)
 ```
 
 The user is presented with the minibuffer and a list of matches,
