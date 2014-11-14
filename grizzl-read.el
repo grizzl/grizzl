@@ -114,19 +114,23 @@
 (defvar grizzl-read-selection 0
   "The selected offset in `grizzl-completing-read'.")
 
-(defvar grizzl-read-max 0)
+(defvar grizzl-read-max 0
+  "The maximum index of result for display.")
 
-(defvar grizzl-read-min 0)
+(defvar grizzl-read-min 0
+  "The minimum index of result for display.")
 
-(defvar grizzl-read-prompt "")
+(defvar grizzl-read-prompt ""
+  "Cached completing-read prompt.")
 
-(defvar grizzl-read-database nil)
+(defvar grizzl-read-database nil
+  "Cached completing-read database")
 
-(defvar grizzl-read-string nil)
+(defvar grizzl-read-string nil
+  "Cached read string. It is for preventing duplicate searching of same input.")
 
-(defvar grizzl-read-timer nil)
-
-(defvar grizzl-selected-result nil)
+(defvar grizzl-read-timer nil
+  "An idle timer for delayed searching job. It is for performance.")
 
 (defvar grizzl-mode-map
   (let ((map (make-sparse-keymap)))
@@ -271,6 +275,10 @@ Each key pressed in the minibuffer filters down the list of matches."
         (grizzl-begin-search))
     (read-from-minibuffer ">>> ")
     grizzl-selected-result))
+
+;;;###autoload
+(defvar grizzl-selected-result nil
+  "It is the selection string.")
 
 ;;;###autoload
 (defun grizzl-set-selection+1 ()
