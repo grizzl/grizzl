@@ -39,11 +39,7 @@
 ;; Usage:
 ;; ------
 ;;
-;; Call `grizzl-completing-read' with an database returned by
-;; `grizzl-make-index':
-;;
-;;    (defvar database (grizzl-make-database '("one" "two" "three")))
-;;    (grizzl-completing-read "Number: " database)
+;;    (grizzl-completing-read "Number: " '("one" "two" "three"))
 ;;
 ;; When the user hits ENTER, either one of the strings is returned on
 ;; success, or nil of nothing matched.
@@ -194,7 +190,7 @@
          (selection (- grizzl-read-max grizzl-read-selection))
          (count lines)
          formated-string)
-    (setq grizzl-selected-result (nth selection item))
+    (setq grizzl-selected-result (nth (- lines selection) item))
     (while (> count 0)
       (setq formated-string (concat formated-string
                                     (if (= selection count)
