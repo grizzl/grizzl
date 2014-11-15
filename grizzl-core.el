@@ -51,7 +51,12 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;; Change Log:
+;; 2014-11-15
+;; * Add `grizzl-database-p'.
+;; * Add `grizzl-result-p'.
 ;;
+;; 2013-05-28
+;; * Initial release refer to `fiplr' package.;;
 ;;; Code:
 
 ;; GNU library.
@@ -183,6 +188,11 @@ will be created case-sensitive, otherwise it will be case-insensitive."
       (string-data    . ,string-data))))
 
 ;;;###autoload
+(defun grizzl-database-p (database)
+  (ignore-errors
+    (hash-table-p (cdr (cadr database)))))
+
+;;;###autoload
 (defun grizzl-search (term database &optional old-result)
   "Fuzzy searches for TERM in INDEX prepared with `grizzl-make-database'.
 
@@ -204,6 +214,12 @@ The result can be read with `grizzl-result-strings'."
                    (grizzl-cons-result cased-term matches acc-res)))
                remainder
                :initial-value result)))
+
+;;;###autoload
+(defun grizzl-result-p (result)
+  "A result struct made by `grizzl-search'."
+  (ignore-errors
+    (hash-table-p (grizzl-result-matches result))))
 
 ;;;###autoload
 (defun grizzl-result-count (result)

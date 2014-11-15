@@ -39,7 +39,17 @@
 ;; Usage:
 ;; ------
 ;;
-;;    (grizzl-completing-read "Number: " '("one" "two" "three"))
+;;    (grizzl-completing-read "Number:" '("one" "two" "three" "four"))
+;;
+;; or
+;;
+;;    (setq database (grizzl-make-database '("one" "two" "three" "four")))
+;;    (grizzl-completing-read-database "Number:" database)
+;;
+;; or
+;;
+;;    ;; Use external FETCHER function to get strings list.
+;;    (grizzl-completing-read-gui "Number:" FETCHER)
 ;;
 ;; When the user hits ENTER, either one of the strings is returned on
 ;; success, or nil of nothing matched.
@@ -58,6 +68,9 @@
 ;;; Change Log:
 ;;
 ;; 2014-11-15
+;; * Support `grizzl-completing-read-gui'.
+;;
+;; 2014-11-14
 ;; * Add grizzl group.
 ;; * Support face customization.
 ;; * Support scrollable result display in minibuffer.
@@ -70,6 +83,9 @@
 ;; * Initial release refer to `fiplr' package.
 ;;
 ;;; Code:
+
+;; GNU library.
+(eval-when-compile (require 'cl))
 
 ;; 3rd party library.
 (require 'grizzl-core)
@@ -99,16 +115,22 @@
   :type 'integer
   :group 'grizzl)
 
-(defcustom grizzl-search-delay 0.2
+(defcustom grizzl-read-search-delay 0.2
   "The maximum number of results to show in `grizzl-completing-read'."
   :type 'integer
   :group 'grizzl)
 
-(defvar grizzl-result nil
+(defvar grizzl-read-result nil
   "The search result in `grizzl-completing-read'.")
+
+(defvar grizzl-read-result-count 0
+  "The count of search result in `grizzl-completing-read'.")
 
 (defvar grizzl-read-selection 0
   "The selected offset in `grizzl-completing-read'.")
+
+(defvar grizzl-read-selection-string nil
+  "The selected string in `grizzl-completing-read'.")
 
 (defvar grizzl-read-max 0
   "The maximum index of result for display.")
@@ -143,7 +165,7 @@
 
 (defun grizzl-move-selection (delta)
   "Move the selection by DELTA rows in `grizzl-completing-read'."
-  (let* ((total (grizzl-result-count grizzl-result))
+  (let* ((total grizzl-read-result-count)
          (new-selection (let ((index (+ grizzl-read-selection delta)))
                           (cond
                            ((< index 0) 0)
@@ -169,11 +191,12 @@
 
 (defun grizzl-prompt-line ()
   "Returns a string to render a full-width prompt in `grizzl-completing-read'."
-  (let* ((count (grizzl-result-count grizzl-result))
-         (match-info (format " select %d (total %d candidate%s) --"
-                             (1+ grizzl-read-selection)
-                             count
-                             (if (= count 1) "" "s"))))
+  (let* ((match-info (format " select %s (total %d candidate%s) --"
+                             (if (> grizzl-read-result-count 0)
+                                 (1+ grizzl-read-selection)
+                               "none")
+                             grizzl-read-result-count
+                             (if (= grizzl-read-result-count 1) "" "s"))))
     (concat (propertize (format "-- %s" grizzl-read-prompt) 'face 'mode-line)
             (propertize " "
                         'face 'mode-line
@@ -181,20 +204,26 @@
                                                       ,(1+ (length match-info)))))
             (propertize match-info 'face 'mode-line))))
 
-(defun grizzl-display-result ()
+(defun grizzl-read-display-result ()
   "Renders a series of overlays to list the matches in the result."
-  (let* ((total (grizzl-result-count grizzl-result))
-         (lines (min total grizzl-read-display-lines))
-         (result-strings (grizzl-result-strings grizzl-result grizzl-read-database))
+  (let* ((lines (min grizzl-read-result-count
+                     grizzl-read-display-lines))
+         (result-strings (cond
+                          ;; A grizzl result ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+                          ((grizzl-result-p grizzl-read-result)
+                           (grizzl-result-strings grizzl-read-result
+                                                  grizzl-read-database))
+                          ;; A strings list ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+                          (t grizzl-read-result)))
          (item (nthcdr grizzl-read-min result-strings))
          (selection (- grizzl-read-max grizzl-read-selection))
          (count lines)
          formated-string)
-    (setq grizzl-selected-result (nth (- lines selection) item))
+    (setq grizzl-read-selection-string (nth (- lines selection) item))
     (while (> count 0)
       (setq formated-string (concat formated-string
                                     (if (= selection count)
-                                        (propertize (format "> %s" (car item))
+                                        (propertize (format "* %s" (car item))
                                                     'face 'grizzl-read-selection-face)
                                       (propertize (format "  %s" (car item))
                                                   'face 'grizzl-read-default-face))
@@ -216,18 +245,51 @@
            (not (minibufferp)))))
 
 (defun grizzl-begin-search ()
-  (when (grizzl-is-begin-search)
-    (setq grizzl-read-string (minibuffer-contents-no-properties)
-          grizzl-result (grizzl-search grizzl-read-string
-                                       grizzl-read-database
-                                       grizzl-result)
-          grizzl-read-selection 0
-          grizzl-read-min 0
-          grizzl-read-max (min grizzl-read-display-lines
-                               (grizzl-result-count grizzl-result)))
-    (grizzl-display-result))
+  (condition-case err
+      (when (grizzl-is-begin-search)
+        (setq grizzl-read-string (minibuffer-contents-no-properties)
+              grizzl-read-result (cond
+                                  ;; A grizzl database ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+                                  ((grizzl-database-p grizzl-read-database)
+                                   (grizzl-search grizzl-read-string
+                                                  grizzl-read-database
+                                                  grizzl-read-result))
+                                  ;; A fetch function ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+                                  ((functionp grizzl-read-database)
+                                   (funcall grizzl-read-database)))
+              grizzl-read-result-count (cond
+                                        ;; A grizzl result ;;;;;;;;;;;;;;;;;;;;;;;;;
+                                        ((grizzl-result-p grizzl-read-result)
+                                         (grizzl-result-count grizzl-read-result))
+                                        ;; A strings list ;;;;;;;;;;;;;;;;;;;;;;;;;;
+                                        (t (length grizzl-read-result)))
+              grizzl-read-selection 0
+              grizzl-read-min 0
+              grizzl-read-max (min grizzl-read-display-lines
+                                   grizzl-read-result-count))
+        (grizzl-read-display-result))
+    (error (error "Error in grizzl-begin-search: %s" err)))
   ;; Pass selected result to hooks in `grizzl-read-update-hook'.
-  (run-hook-with-args 'grizzl-read-update-hook grizzl-selected-result))
+  (run-hook-with-args 'grizzl-read-update-hook grizzl-read-selection-string))
+
+(defun grizzl-completing-read-impl (prompt database)
+  "Performs a completing-read in the minibuffer:
+* Use DATABASE to fuzzy search. Each key pressed in the minibuffer filters down 
+the list of matches.
+* Use DATABASE as a function to get a strings list."
+  (unless (stringp prompt)
+    (error "PROMPT must be a string!"))
+  (setq grizzl-read-prompt prompt
+        grizzl-read-database database
+        grizzl-read-result nil
+        grizzl-read-string nil)
+  (minibuffer-with-setup-hook
+      (lambda ()
+        (setq truncate-lines t)
+        (grizzl-mode 1)
+        (grizzl-begin-search))
+    (read-from-minibuffer ">>> ")
+    (grizzl-selection-result)))
 
 (defun grizzl-exit ()
   (grizzl-mode -1))
@@ -239,14 +301,14 @@
     (error "The grizzl-mode is only for minibuffer!"))
   (if grizzl-mode
       (progn
-        (setq grizzl-read-timer (run-with-idle-timer grizzl-search-delay t
-                                                'grizzl-begin-search))
-        (add-hook 'post-command-hook 'grizzl-display-result nil t)
+        (setq grizzl-read-timer (run-with-idle-timer grizzl-read-search-delay t
+                                                     'grizzl-begin-search))
+        (add-hook 'post-command-hook 'grizzl-read-display-result nil t)
         (add-hook 'minibuffer-exit-hook 'grizzl-exit nil t))
     (when (timerp grizzl-read-timer)
       (cancel-timer grizzl-read-timer)
       (setq grizzl-read-timer nil))
-    (remove-hook 'post-command-hook 'grizzl-display-result t)
+    (remove-hook 'post-command-hook 'grizzl-read-display-result t)
     (remove-hook 'minibuffer-exit-hook 'grizzl-exit t)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -254,31 +316,30 @@
 
 ;;;###autoload
 (defun grizzl-completing-read-database (prompt database)
-  "Performs a completing-read in the minibuffer using INDEX to fuzzy search.
-Each key pressed in the minibuffer filters down the list of matches."
-  (unless (stringp prompt)
-    (error "PROMPT must be a string!"))
-  (setq grizzl-read-prompt prompt
-        grizzl-read-database database
-        grizzl-read-string nil)
-  (minibuffer-with-setup-hook
-      (lambda ()
-        (setq truncate-lines t)
-        (grizzl-mode 1)
-        (grizzl-begin-search))
-    (read-from-minibuffer ">>> ")
-    grizzl-selected-result))
+  "Performs a completing-read in the minibuffer using DATABASE to fuzzy search."
+  (grizzl-completing-read-impl prompt database))
 
 ;;;###autoload
 (defun grizzl-completing-read (prompt strings)
-  "Performs a completing-read in the minibuffer using INDEX to fuzzy search.
-Each key pressed in the minibuffer filters down the list of matches."
-  (grizzl-completing-read-database prompt
-                                   (grizzl-make-database strings)))
+  "Performs a completing-read in the minibuffer with given STRINGS list."
+  (grizzl-completing-read-impl prompt
+                               (grizzl-make-database strings)))
 
 ;;;###autoload
-(defvar grizzl-selected-result nil
-  "It is the selection string.")
+(defun grizzl-completing-read-gui (prompt func)
+  "Performs a completing-read in the minibuffer using given FUNC. It doesn't do 
+any search job for you and provides pretty GUI only."
+  (grizzl-completing-read-impl prompt func))
+
+;;;###autoload
+(defun grizzl-selection-result ()
+  "It is the selection string."
+  grizzl-read-selection-string)
+
+;;;###autoload
+(defun grizzl-selection ()
+  "It is the selection index."
+  grizzl-read-selection)
 
 ;;;###autoload
 (defun grizzl-set-selection+1 ()
