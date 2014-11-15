@@ -44,6 +44,22 @@
 (require 'imenu)
 (eval-when-compile (require 'cl))
 
+;; 3rd party library.
+(require 'grizzl)
+
+(defcustom grizzl-imenu-before-goto-hook nil
+  ""
+  :type '(repeat function)
+  :group 'grizzl)
+
+(defcustom grizzl-imenu-after-goto-hook nil
+  ""
+  :type '(repeat function)
+  :group 'grizzl)
+
+(defun grizzl-imenu-goto (selection)
+  )
+
 (defun grizzl-parse-imenu (database)
   (when database
     (let (ret)
@@ -62,15 +78,18 @@
 ;;;###autoload
 (defun grizzl-imenu ()
   (interactive)
-  (let* ((database (save-excursion
-                     (funcall imenu-create-index-function)))
-         (entries (grizzl-parse-imenu database)))
+  (lexical-let*
+      ((database (save-excursion
+                   (imenu--cleanup)
+                   (funcall imenu-create-index-function)))
+       (entries (grizzl-parse-imenu database)))
     (grizzl-completing-read "find local symbol"
                             (mapcar (lambda (entry)
                                       (car entry))
                                     entries))
-    (goto-char (marker-position (cdr (elt entries
-                                          (grizzl-selection)))))
+    (goto-char (marker-position
+                (cdr (elt entries
+                          (grizzl-selection)))))
     (recenter 3)))
 
 (provide 'grizzl-imenu)

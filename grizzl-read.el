@@ -106,7 +106,10 @@
   :group 'grizzl)
 
 (defcustom grizzl-read-update-hook nil
-  "A hook triggered at selection changed in `grizzl-completing-read'."
+  "A hook triggered at selection changed in `grizzl-completing-read'. It takes 
+2 arguments:
+1st is `grizzl-read-selection';
+2nd is `grizzl-read-selection-string'."
   :type '(repeat function)
   :group 'grizzl)
 
@@ -271,7 +274,9 @@
         (grizzl-read-display-result))
     (error (error "Error in grizzl-begin-search: %s" err)))
   ;; Pass selected result to hooks in `grizzl-read-update-hook'.
-  (run-hook-with-args 'grizzl-read-update-hook grizzl-read-selection-string))
+  (run-hook-with-args 'grizzl-read-update-hook
+                      grizzl-read-selection
+                      grizzl-read-selection-string))
 
 (defun grizzl-completing-read-impl (prompt database)
   "Performs a completing-read in the minibuffer:
@@ -289,7 +294,9 @@ the list of matches.
         (setq truncate-lines t)
         (grizzl-mode 1)
         (grizzl-begin-search))
+    ;; TODO: catch exit event.
     (read-from-minibuffer ">>> ")
+    (setq-default grizzl-read-update-hook nil)
     (grizzl-selection-result)))
 
 (defun grizzl-exit ()
