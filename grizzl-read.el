@@ -211,8 +211,9 @@
          (result-strings (cond
                           ;; A grizzl result ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
                           ((grizzl-result-p grizzl-read-result)
-                           (grizzl-result-strings grizzl-read-result
-                                                  grizzl-read-database))
+                           (reverse
+                            (grizzl-result-strings grizzl-read-result
+                                                   grizzl-read-database)))
                           ;; A strings list ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
                           (t grizzl-read-result)))
          (item (nthcdr grizzl-read-min result-strings))
