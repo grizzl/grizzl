@@ -104,8 +104,8 @@ Each key pressed in the minibuffer filters down the list of matches."
                         (remove-hook 'post-command-hook    hookfun t))))
           (add-hook 'minibuffer-exit-hook exitfun nil t)
           (add-hook 'post-command-hook    hookfun nil t)))
-    (read-from-minibuffer ">>> ")
-    (grizzl-selected-result index)))
+    (let ((read-value (read-from-minibuffer ">>> ")))
+      (or (grizzl-selected-result index) read-value))))
 
 ;;;###autoload
 (defun grizzl-selected-result (index)
