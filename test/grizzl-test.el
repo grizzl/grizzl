@@ -1,4 +1,4 @@
-;;; grizzl-test.el --- Fuzzy search index tests.
+;;; grizzl-test.el --- Fuzzy search index tests. -*- lexical-binding: t -*-
 
 ;; Copyright © 2013-2014 Chris Corbyn
 ;; Copyright © 2015 Bozhidar Batsov
@@ -7,7 +7,7 @@
 
 (require 'grizzl)
 
-(noflet ((index (lambda (&rest opts)
+(let* ((index (lambda (&rest opts)
                 (apply 'grizzl-make-index
                        (append '(("Models"
                                   "Controllers"
