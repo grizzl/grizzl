@@ -1,11 +1,11 @@
-;;; grizzl-core-test.el --- Fuzzy search index tests.
+;;; grizzl-test.el --- Fuzzy search index tests.
 
 ;; Copyright © 2013-2014 Chris Corbyn
 ;; Copyright © 2015 Bozhidar Batsov
 
 ;;; --- Unit Tests
 
-(require 'grizzl-core)
+(require 'grizzl)
 
 (let* ((index (lambda (&rest opts)
                 (apply 'grizzl-make-index

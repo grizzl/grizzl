@@ -1,12 +1,12 @@
 OLDVER  = `head -n1 VERSION`
 NEWVER  = $(OLDVER)
 PKGNAME = grizzl
-FILES   = grizzl-core.el grizzl-read.el grizzl.el grizzl-pkg.el README.md
+FILES   = grizzl.el README.md
 
 all: units package
 
 units:
-	emacs -batch -l ert -l cl -l grizzl-core.el -l test/grizzl-core-test.el -f ert-run-tests-batch-and-exit
+	emacs -batch -l ert -l cl -l grizzl.el -l test/grizzl-test.el -f ert-run-tests-batch-and-exit
 
 reversion:
 	perl -pi -e "s/$(OLDVER)/$(NEWVER)/g" *.el
