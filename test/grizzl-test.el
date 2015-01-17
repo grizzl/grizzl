@@ -7,7 +7,7 @@
 
 (require 'grizzl)
 
-(let* ((index (lambda (&rest opts)
+(noflet ((index (lambda (&rest opts)
                 (apply 'grizzl-make-index
                        (append '(("Models"
                                   "Controllers"

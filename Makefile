@@ -1,19 +1,30 @@
-OLDVER  = `head -n1 VERSION`
-NEWVER  = $(OLDVER)
-PKGNAME = grizzl
-FILES   = grizzl.el README.md
+EMACS ?= emacs
+EMACSFLAGS =
+CASK = cask
 
-all: units package
+OBJECTS = grizzl.elc
 
-units:
-	emacs -batch -l ert -l cl -l grizzl.el -l test/grizzl-test.el -f ert-run-tests-batch-and-exit
+elpa:
+	$(CASK) install
+	$(CASK) update
+	touch $@
 
-reversion:
-	perl -pi -e "s/$(OLDVER)/$(NEWVER)/g" *.el
-	echo $(NEWVER) > VERSION
+.PHONY: build
+build : elpa $(OBJECTS)
 
-package:
-	mkdir -p $(PKGNAME)-$(NEWVER)
-	cp $(FILES) $(PKGNAME)-$(NEWVER)/
-	tar cvf $(PKGNAME)-$(NEWVER).tar $(PKGNAME)-$(NEWVER)
-	rm -r $(PKGNAME)-$(NEWVER)
+.PHONY: test
+test : build
+	$(CASK) exec $(EMACS) --no-site-file --no-site-lisp --batch \
+		$(EMACSFLAGS) \
+		-l test/run-tests
+
+.PHONY: clean
+clean :
+	rm -f $(OBJECTS)
+	rm -f elpa
+	rm -rf .cask # Clean packages installed for development
+
+%.elc : %.el
+	$(CASK) exec $(EMACS) --no-site-file --no-site-lisp --batch \
+		$(EMACSFLAGS) \
+		-f batch-byte-compile $<

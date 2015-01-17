@@ -1,0 +1,19 @@
+#!/usr/bin/env emacs --script
+
+(let ((current-directory (file-name-directory load-file-name)))
+  (setq grizzl-test-path (expand-file-name "." current-directory))
+  (setq grizzl-root-path (expand-file-name ".." current-directory)))
+
+(add-to-list 'load-path grizzl-root-path)
+(add-to-list 'load-path grizzl-test-path)
+
+(require 'grizzl)
+(require 'noflet)
+
+(dolist (test-file (or argv (directory-files grizzl-test-path t "-test.el$")))
+  (load test-file nil t))
+
+;; setup test environment
+;; and run tests
+
+(ert-run-tests-batch-and-exit t)
