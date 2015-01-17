@@ -1,6 +1,7 @@
 ;;; grizzl-core-test.el --- Fuzzy search index tests.
 
-;; Copyright © 2013 Chris Corbyn
+;; Copyright © 2013-2014 Chris Corbyn
+;; Copyright © 2015 Bozhidar Batsov
 
 ;;; --- Unit Tests
 

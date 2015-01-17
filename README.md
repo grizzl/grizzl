@@ -164,5 +164,5 @@ read a subseq of the matched result. Just specify the keyword arguments
 
 ## Copyright & Licensing
 
-Grizzl is Copyright (c) 2013 Chris Corbyn and licensed under the same terms as
+Grizzl is Copyright (c) 2013-2015 Chris Corbyn, Bozhidar Batsov and licensed under the same terms as
 GNU Emacs.

@@ -1,11 +1,13 @@
 ;;; grizzl-read.el --- A fuzzy completing-read backed by grizzl. -*- lexical-binding: t -*-
 
-;; Copyright © 2013 Chris Corbyn
+;; Copyright © 2013-2014 Chris Corbyn
+;; Copyright © 2015 Bozhidar Batsov
 ;;
-;; Author:   Chris Corbyn <chris@w3style.co.uk>
-;; URL:      https://github.com/d11wtq/grizzl
-;; Version:  0.1.2
-;; Keywords: convenience, usability
+;; Author:     Chris Corbyn <chris@w3style.co.uk>
+;; Maintainer: Bozhidar Batsov <bozhidar@batsov.com>
+;; URL:        https://github.com/d11wtq/grizzl
+;; Version:    0.1.2
+;; Keywords:   convenience, usability
 
 ;; This program is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
