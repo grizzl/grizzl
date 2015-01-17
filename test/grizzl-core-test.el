@@ -6,32 +6,31 @@
 
 (require 'grizzl-core)
 
-(lexical-let*
-    ((index (lambda (&rest opts)
-              (apply 'grizzl-make-index
-                     (append '(("Models"
-                                "Controllers"
-                                "Views"
-                                "Registry"))
-                             opts))))
+(let* ((index (lambda (&rest opts)
+                (apply 'grizzl-make-index
+                       (append '(("Models"
+                                  "Controllers"
+                                  "Views"
+                                  "Registry"))
+                               opts))))
 
-     (search (lambda (term &rest opts)
-               "Perform a search and nothing more."
-               (grizzl-search term
-                              (apply index opts)
-                              (plist-get opts :prev))))
+       (search (lambda (term &rest opts)
+                 "Perform a search and nothing more."
+                 (grizzl-search term
+                                (apply index opts)
+                                (plist-get opts :prev))))
 
-     (search-read (lambda (term &rest opts)
-               "Perform a search and read the result strings."
-               (grizzl-result-strings (apply search (append (list term) opts))
-                                      (apply index opts)
-                                      :start (plist-get opts :start)
-                                      :end   (plist-get opts :end))))
+       (search-read (lambda (term &rest opts)
+                      "Perform a search and read the result strings."
+                      (grizzl-result-strings (apply search (append (list term) opts))
+                                             (apply index opts)
+                                             :start (plist-get opts :start)
+                                             :end   (plist-get opts :end))))
 
-     (search-sort (lambda (term &rest opts)
-                    "Search, and sort the result lexographically."
-                    (sort (apply search-read (append (list term) opts))
-                          #'string-lessp))))
+       (search-sort (lambda (term &rest opts)
+                      "Search, and sort the result lexographically."
+                      (sort (apply search-read (append (list term) opts))
+                            #'string-lessp))))
 
   (ert-deftest initial-search-multi-match-test ()
     "Test grizzl can fuzzy-match multiple matches in an index."
@@ -80,10 +79,10 @@
     (should (equal (funcall search-read "es")
                    '("Views" "Models" "Controllers" "Registry"))))
 
-;  (ert-deftest ambiguous-proximity-scoring-test ()
-;    "Test grizzl picks the closest letters for proximity scoring."
-;    (should (equal (funcall search-read "ol")
-;                   '("Controllers" "Models"))))
+                                        ;  (ert-deftest ambiguous-proximity-scoring-test ()
+                                        ;    "Test grizzl picks the closest letters for proximity scoring."
+                                        ;    (should (equal (funcall search-read "ol")
+                                        ;                   '("Controllers" "Models"))))
 
   (ert-deftest limit-results-test ()
     "Test grizzl can limit the number of results returned."

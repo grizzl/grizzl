@@ -1,4 +1,4 @@
-;;; grizzl.el --- Fast fuzzy search index for Emacs.
+;;; grizzl.el --- Fast fuzzy search index for Emacs. -*- lexical-binding: t -*-
 
 ;; Copyright © 2013 Chris Corbyn
 ;;

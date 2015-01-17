@@ -1,4 +1,4 @@
-;;; grizzl-read.el --- A fuzzy completing-read backed by grizzl.
+;;; grizzl-read.el --- A fuzzy completing-read backed by grizzl. -*- lexical-binding: t -*-
 
 ;; Copyright © 2013 Chris Corbyn
 ;;
@@ -92,16 +92,15 @@ Each key pressed in the minibuffer filters down the list of matches."
         (setq *grizzl-current-result* nil)
         (setq *grizzl-current-selection* 0)
         (grizzl-mode 1)
-        (lexical-let*
-            ((hookfun (lambda ()
-                        (setq *grizzl-current-result*
-                              (grizzl-search (minibuffer-contents)
-                                             index
-                                             *grizzl-current-result*))
-                        (grizzl-display-result index prompt)))
-             (exitfun (lambda ()
-                        (grizzl-mode -1)
-                        (remove-hook 'post-command-hook    hookfun t))))
+        (let* ((hookfun (lambda ()
+                          (setq *grizzl-current-result*
+                                (grizzl-search (minibuffer-contents)
+                                               index
+                                               *grizzl-current-result*))
+                          (grizzl-display-result index prompt)))
+               (exitfun (lambda ()
+                          (grizzl-mode -1)
+                          (remove-hook 'post-command-hook    hookfun t))))
           (add-hook 'minibuffer-exit-hook exitfun nil t)
           (add-hook 'post-command-hook    hookfun nil t)))
     (let ((read-value (read-from-minibuffer ">>> ")))
