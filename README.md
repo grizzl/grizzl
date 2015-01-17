@@ -8,11 +8,6 @@ special type of lookup table and supporting incremental searches (searches
 where the result can be narrowed-down by only searching what is already
 matched).
 
-There are two parts to the library:
-
-  1. grizzl-core.el, which provides the algorithm and is not interactive
-  2. grizzl-read.el, which wraps the algorithm with a completing-read
-
 ## Usage
 
 Grizzl is still in development, though it is functional at this point, it
@@ -60,7 +55,7 @@ work.
 ### Using the algorithm non-interactively
 
 Grizzl aims to be small and focused, so that it can be used in other
-projects, without a huge codebase following it around. grizzl-core.el
+projects, without a huge codebase following it around. grizzl
 provides the functionality needed to incorporate fuzzy search logic into
 any Emacs Lisp code.
 
