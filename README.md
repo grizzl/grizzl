@@ -28,7 +28,7 @@ require the preparation of a search index before use. It is assumed the
 search index will be re-used, though it need not be. For small data sets
 it may be better to just create an index on the fly.
 
-``` lisp
+```el
 ;; define a search index
 (defvar *search-index* (grizzl-make-index '("one" "two" "three" "four")))
 
@@ -50,7 +50,7 @@ as a string. If not, it returns nil.
 Grizzl is case-insensitive by-default. To make it case-sensitive, specify
 `:case-sensitive t` when creating the index.
 
-``` lisp
+```el
 (grizzl-make-index '("One" "TWO" "three" "Four") :case-sensitive t)
 ```
 
@@ -74,7 +74,7 @@ regular expression matching and globbing.
 
 To define the index, pass a list of strings to `grizzl-make-index`.
 
-``` lisp
+```el
 (grizzl-make-index '("one" "two" "three"))
 ```
 
@@ -89,7 +89,7 @@ keyword argument `:PROGRESS-FN`. The callback receives two arguments,
 
 The following example shows the progress to the user as indexing is done.
 
-``` lisp
+```el
 (grizzl-make-index huge-list-of-strings
                    :progress-fn (lambda (n total)
                                   (message (format "Indexed %d/%d" n total))))
@@ -103,7 +103,7 @@ Indexes are case-insensitive by default, for the most-effective fuzzy-matching
 in most cases. If you need a case-sensitive index, specify a non-nil keyword
 argument `:CASE-SENSITIVE`.
 
-``` lisp
+```el
 (grizzl-make-index '("One" "TWO" "three" "Four") :case-sensitive t)
 ```
 
@@ -112,7 +112,7 @@ argument `:CASE-SENSITIVE`.
 Given your index, ou may now search for something given a fuzzy search term,
 using `grizzl-search`.
 
-``` lisp
+```el
 (defvar *search-result* (grizzl-search "cntrl" *search-index*))
 ```
 
@@ -131,7 +131,7 @@ previous search term, there is little to no cost in passing the previous
 result in any case, since Grizzl will simply rewind its internal result tree
 and begin a fresh search, as needed.
 
-``` lisp
+```el
 (defvar *result-1* (grizzl-search "c"    *search-index*))
 (defvar *result-2* (grizzl-search "cn"   *search-index* *result-1*))
 (defvar *result-3* (grizzl-search "cnt"  *search-index* *result-2*))
@@ -145,7 +145,7 @@ argument unspecified.
 
 Search results from `grizzl-search` are read with `grizzl-result-strings`.
 
-``` lisp
+```el
 (grizzl-result-strings *search-result* *search-index*)
 ```
 
@@ -155,7 +155,7 @@ It is possible (and perhaps desirable, for performance reasons) to only
 read a subseq of the matched result. Just specify the keyword arguments
 `:START` and `:END` when reading the result strings.
 
-``` lisp
+```el
 ;; returns at most the best 10 results
 (grizzl-result-strings *search-result* *search-index*
                        :start 0
