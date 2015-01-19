@@ -147,8 +147,8 @@ If the :END option is specified, up to :END results are returned."
                             (< (cadr (gethash a matches))
                                (cadr (gethash b matches))))))
            (best (if (or start end)
-                     (delete-if-not 'identity
-                                    (subseq ordered (or start 0) end))
+                     (cl-delete-if-not 'identity
+                                       (cl-subseq ordered (or start 0) end))
                    ordered)))
       (mapcar (lambda (n)
                 (car (elt strings n)))
@@ -222,13 +222,13 @@ If the :END option is specified, up to :END results are returned."
 (defun grizzl-search-increment (sub-table result)
   "Use the search lookup table to filter already-accumulated results."
   (cl-flet ((next-offset (key current sub-table)
-              (find-if (lambda (v)
+              (cl-find-if (lambda (v)
                          (> v current))
                        (gethash key sub-table))))
     (maphash (lambda (k v)
                (let* ((oldpos (car v))
                       (oldrank (cadr v))
-                      (len (caddr v))
+                      (len (cl-caddr v))
                       (newpos (next-offset k oldpos sub-table)))
                  (if newpos
                      (puthash k (list newpos
