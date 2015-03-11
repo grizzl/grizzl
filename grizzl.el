@@ -136,9 +136,7 @@ If the :START option is specified, results are read from the given offset.
 If the :END option is specified, up to :END results are returned."
   (let* ((matches (grizzl-result-matches result))
          (strings (grizzl-index-strings index))
-         (loaded '())
-         (start (plist-get options :start))
-         (end (plist-get options :end)))
+         (loaded '()))
     (maphash (lambda (string-offset char-offset)
                (push string-offset loaded))
              matches)
@@ -146,9 +144,11 @@ If the :END option is specified, up to :END results are returned."
                           (lambda (a b)
                             (< (cadr (gethash a matches))
                                (cadr (gethash b matches))))))
+           (start (or (plist-get options :start) 0))
+           (end (min (plist-get options :end) (length ordered)))
            (best (if (or start end)
                      (cl-delete-if-not 'identity
-                                       (cl-subseq ordered (or start 0) end))
+                                       (cl-subseq ordered start end))
                    ordered)))
       (mapcar (lambda (n)
                 (car (elt strings n)))
