@@ -55,7 +55,7 @@
 ;; `grizzl-make-index':
 ;;
 ;;    (defvar *index* (grizzl-make-index '("one" "two" "three")))
-;;    (grizzl-completing-read "Number: " index)
+;;    (grizzl-completing-read "Number: " *index*)
 ;;
 ;; When the user hits ENTER, either one of the strings is returned on
 ;; success, or nil of nothing matched.
