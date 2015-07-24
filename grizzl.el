@@ -63,6 +63,8 @@
 ;; The arrow keys can be used to navigate within the results.
 
 
+;;; Code:
+
 (eval-when-compile
   (require 'cl-lib))
 
