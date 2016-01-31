@@ -94,7 +94,7 @@ will be created case-sensitive, otherwise it will be case-insensitive."
                  (1+ list-offset))
                strings
                :initial-value 0)
-    (maphash (lambda (char str-map)
+    (maphash (lambda (_char str-map)
                (maphash (lambda (list-offset locations)
                           (puthash list-offset (reverse locations) str-map))
                         str-map)) lookup-table)
@@ -139,7 +139,7 @@ If the :END option is specified, up to :END results are returned."
   (let* ((matches (grizzl-result-matches result))
          (strings (grizzl-index-strings index))
          (loaded '()))
-    (maphash (lambda (string-offset char-offset)
+    (maphash (lambda (string-offset _char-offset)
                (push string-offset loaded))
              matches)
     (let* ((ordered (sort loaded
