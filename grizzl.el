@@ -379,12 +379,12 @@ if this is the current selection."
   (let* ((count (grizzl-result-count *grizzl-current-result*))
          (match-info (format " (%d candidate%s) ---- *-"
                              count (if (= count 1) "" "s"))))
-    (concat (propertize (format "-*%s *-" prompt) 'face 'modeline-inactive)
+    (concat (propertize (format "-*%s *-" prompt) 'face 'mode-line-inactive)
             (propertize " "
-                        'face    'modeline-inactive
+                        'face    'mode-line-inactive
                         'display `(space :align-to (- right
                                                       ,(1+ (length match-info)))))
-            (propertize match-info 'face 'modeline-inactive))))
+            (propertize match-info 'face 'mode-line-inactive))))
 
 (defun grizzl-current-selection ()
   "Get the currently selected index in `grizzl-completing-read'."
