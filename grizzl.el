@@ -267,6 +267,10 @@ If the :END option is specified, up to :END results are returned."
   "Face for selected result."
   :group 'grizzl-mode)
 
+(defface grizzl-prompt-face
+  `((t :inherit 'mode-line-inactive))
+  "Face used for grizzl prompt."
+   :group 'grizzl-mode)
 
 ;;; --- Minor Mode Definition
 
@@ -379,12 +383,13 @@ if this is the current selection."
   (let* ((count (grizzl-result-count *grizzl-current-result*))
          (match-info (format " (%d candidate%s) ---- *-"
                              count (if (= count 1) "" "s"))))
-    (concat (propertize (format "-*%s *-" prompt) 'face 'mode-line-inactive)
+    (concat (propertize (format "-*%s *-" prompt) 'face 'grizzl-prompt-face)
+
             (propertize " "
-                        'face    'mode-line-inactive
+                        'face    'grizzl-prompt-face
                         'display `(space :align-to (- right
                                                       ,(1+ (length match-info)))))
-            (propertize match-info 'face 'mode-line-inactive))))
+            (propertize match-info 'face 'grizzl-prompt-face))))
 
 (defun grizzl-current-selection ()
   "Get the currently selected index in `grizzl-completing-read'."
