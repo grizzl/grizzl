@@ -298,6 +298,7 @@ Each key pressed in the minibuffer filters down the list of matches."
       (lambda ()
         (setq *grizzl-current-result* nil)
         (setq *grizzl-current-selection* 0)
+        (setq truncate-lines t)
         (grizzl-mode 1)
         (let* ((hookfun (lambda ()
                           (setq *grizzl-current-result*
