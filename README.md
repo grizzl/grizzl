@@ -1,6 +1,6 @@
 # Grizzl - A fuzzy-search utility for Emacs
 
-** The project is deprecated in favour of [Ivy](https://github.com/abo-abo/swiper) **
+**The project is deprecated in favour of [Ivy](https://github.com/abo-abo/swiper)**
 
 ![Screenshot](http://i.imgur.com/n3EweV3.png)
 
